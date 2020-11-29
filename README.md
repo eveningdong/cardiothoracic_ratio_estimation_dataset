@@ -1,4 +1,4 @@
-# Extended Wingspan Dataset
+# Cardiothoracic Ratio (CTR) Estimation Dataset
 
 ## Description
 Extended Wingspan Cardiothoracic Ratio (CTR) Estimation Dataset used in the paper [Unsupervised Domain Adaptation for Automatic Estimation of Cardiothoracic Ratio](https://link.springer.com/chapter/10.1007/978-3-030-00934-2_61) and [Neural Architecture Search for Adversarial Medical Image Segmentation](https://link.springer.com/chapter/10.1007/978-3-030-00934-2_61). The extension includes additional 38 patients and chest organ segmenation masks for all patients.

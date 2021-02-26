@@ -5,13 +5,19 @@ Extended Wingspan Cardiothoracic Ratio (CTR) Estimation Dataset used in the pape
 
 The dataset contains 259 patients' chest X-ray images, chest organ segmentation masks, and key points for CTR estimation.
 
-## Download
+## Full Dataset
 The full dataset can be downloaded vis this [link](https://drive.google.com/file/d/1EgcxMyMUgRm4VvodGDK9w_HJbL1jCW1o/view?usp=sharing).
 
-## Data Structure
+### Data Structure
 Each patient has an independent folder with the folder name as his ID. In each folder, there are `original.dcm`, `left_lung.png`, `right_lung.png`, `heart.png`, and one `key_points.txt`.
 
 In `key_points.txt`, you will see `name,x,y`. `name` is the organ name, and `x` and `y` are the normalized pixel coordinates for the `width` and `height`. `(x=0, y=0)` stands for the upper left corner and `(x=1, y=1)` stands for the lower right corner.
+
+## Downsampled Dataset
+The downsampled dataset with fixed resolution `512 x 512` is provided within the repository along with another popular chest organ segmentation dataset  Japanese Society of Radiological Technology [JSRT](https://jsrt.or.jp/). 
+
+### Data Structure
+Two datasets `wingspan`  and `jsrt` have the same structure. Each dataset has two folders `png` and `mask`, where `mask` has three sub-folders `left_lung`, `right_lung` and `heart`.
 
 ## Citation
 If you find the work and dataset are useful in your research, please cite:

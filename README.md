@@ -14,10 +14,13 @@ Each patient has an independent folder with the folder name as his ID. In each f
 In `key_points.txt`, you will see `name,x,y`. `name` is the organ name, and `x` and `y` are the normalized pixel coordinates for the `width` and `height`. `(x=0, y=0)` stands for the upper left corner and `(x=1, y=1)` stands for the lower right corner.
 
 ## Downsampled Dataset
-The downsampled dataset with fixed resolution `512 x 512` is provided within the repository along with another popular chest organ segmentation dataset  Japanese Society of Radiological Technology [JSRT](https://jsrt.or.jp/). 
+The downsampled dataset with fixed resolution `512 x 512` is provided within the repository. In addition, another popular chest organ segmentation dataset Japanese Society of Radiological Technology([JSRT](https://jsrt.or.jp/)) is provided here as a comparison. 
 
 ### Data Structure
 Two datasets `wingspan`  and `jsrt` have the same structure. Each dataset has two folders `png` and `mask`, where `mask` has three sub-folders `left_lung`, `right_lung` and `heart`.
+
+## Python API
+Python functions for CTR estimation is provided in `utils.py`.
 
 ## Citation
 If you find the work and dataset are useful in your research, please cite:

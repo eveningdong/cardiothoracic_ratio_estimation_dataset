@@ -1,9 +1,14 @@
 import os
 import cv2
+import collections
 import numpy as np
 from skimage import color, img_as_float
 
 mask_map = [('left_lung', 1), ('right_lung', 2)]
+
+
+resize_width = 512
+resize_height = 512
 
 
 def fill_hole(mask):
@@ -32,8 +37,8 @@ def fill_hole(mask):
 
 def clean_mask(mask):
     mask = fill_hole(mask)
-    _, contours, _ = cv2.findContours(np.copy(mask), cv2.RETR_TREE,
-                                      cv2.CHAIN_APPROX_NONE)
+    contours, _ = cv2.findContours(np.copy(mask), cv2.RETR_TREE,
+                                   cv2.CHAIN_APPROX_NONE)
 
     if len(contours) == 1:
         return mask, contours[0]
@@ -98,30 +103,86 @@ def get_central(ind_left, ind_right, top):
     return int(np.mean(centrals))
 
 
-def compute_ctr(left_lung, right_lung, 
-                alpha_1=0.5, alpha_2=0.8, beta_1=0.75, beta_2=0.85):
+def find_location(contour, extremum):
+    # return absolute coordinates
+    possible_locations = np.argwhere(contour == extremum)
+
+    if possible_locations.shape[0] == 1:
+        return (extremum, contour[possible_locations[0, 0]][0, 1])
+    else:
+        return (extremum, np.amax(contour[possible_locations[:, 0]][:, 0, 1]))
+
+
+def extract_right_lung_corner(contour_right):
+    """Extract right lung corner.
+
+    :param contour_right: contour for the right lung mask
+    :return: (width, height) in absolute value
+    """
+    # Find Convex Hull
+    hull = cv2.convexHull(contour_right, returnPoints=True)
+
+    vert_num = len(hull)
+
+    # Compute Lung Corner
+    left = hull[0][0][0]
+    right = left
+    for i in range(0, vert_num):
+        left = hull[i][0][0] if hull[i][0][0] < left else left
+        right = hull[i][0][0] if hull[i][0][0] > right else right
+
+    threshold = left + (right - left) / 3
+
+    res = [0, 0]
+    for i in range(0, vert_num):
+        if hull[i][0][0] > threshold:
+            if res[0] == 0 and res[1] == 0:
+                res = hull[i][0]
+            elif res[1] < hull[i][0][1]:
+                res = hull[i][0]
+    return tuple(res)
+
+
+def compute_ctr(left_lung, right_lung, alpha_1=0.5, alpha_2=0.8, beta_1=0.75,
+                beta_2=0.85):
+    ind_left = left_lung > 0
+    ind_right = right_lung > 0
+
     left_lung, contour_left = clean_mask(left_lung)
     right_lung, contour_right = clean_mask(right_lung)
 
     top_l, bot_l, left_l, right_l = get_border(contour_left)
     top_r, bot_r, left_r, right_r = get_border(contour_right)
 
-    ind_left = left_lung > 0
-    ind_right = right_lung > 0
+    left = left_r
+    right = right_l
 
     top = max(top_l, top_r)
     bot = min(bot_l, bot_r)
-    left = left_r
-    right = right_l
-    width = right - left + 1
-    height = (bot - top + 1)
 
-    central = get_central(ind_left, ind_right, top)
+    coor_lung_left = find_location(contour_right, left)
+    coor_lung_right = find_location(contour_left, right)
+
+    mask_left = ind_left.astype(np.int32)
+    mask_right = ind_right.astype(np.int32)
+
+    mask_left[np.nonzero(mask_left)] = 3
+    mask_right[np.nonzero(mask_right)] = 2
+
+    mask = mask_left + mask_right
+
+    central = get_central(ind_left, ind_right, top)  # central line
+
+    height = (bot - top + 1)
 
     left_row_max = 0
     right_row_max = 0
+    row_left = 0
+    row_right = 0
+    right_loc = 0
+    left_loc = 0
 
-    for row in range(top + int(alpha_1 * height), top + int(alpha_2 * height)):
+    for row in range(top + int(beta_1 * height), top + int(beta_2 * height)):
         # print(row)
         ll, lr = get_row_border(ind_left[row, :])
         dis_left = ll - central
@@ -130,18 +191,32 @@ def compute_ctr(left_lung, right_lung,
             break
 
         left_row_max = dis_left
+        row_left = row
+        right_loc = ll
 
-    for row in range(top + int(beta_1 * height), top + int(beta_2 * height)):
-        # print(row)
+    right_lung_corner_column, right_lung_corner_row = extract_right_lung_corner(contour_right)
+    # print(right_lung_corner_row, top + int(alpha_1 * height))
+    for row in range(right_lung_corner_row - 4, top + int(alpha_1 * height), -1):
         rl, rr = get_row_border(ind_right[row, :])
         dis_right = central - rr
 
-        if dis_right < right_row_max:
-            break
+        if dis_right > right_row_max:
+            right_row_max = dis_right
+            row_right = row
+            left_loc = rr
 
-        right_row_max = dis_right
+    coor_lung_left = coor_lung_left[0] * 1.0 / resize_width, coor_lung_left[1] * 1.0 / resize_height
+    coor_lung_right = coor_lung_right[0] * 1.0 / resize_width, coor_lung_right[1] * 1.0 / resize_height
+    coor_heart_right = (right_loc * 1.0 / resize_width, row_left * 1.0 / resize_height)
+    coor_heart_left = (left_loc * 1.0 / resize_width, row_right * 1.0 / resize_height)
 
-    ctr = (left_row_max + right_row_max) / width
+    od = collections.OrderedDict()
+    od['lung_left'] = coor_lung_left
+    od['lung_right'] = coor_lung_right
+    od['heart_left'] = coor_heart_left
+    od['heart_right'] = coor_heart_right
+
+    ctr = (od['heart_right'][0] - od['heart_left'][0]) / (od['lung_right'][0] - od['lung_left'][0])
     return ctr
 
 

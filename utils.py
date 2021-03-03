@@ -7,9 +7,6 @@ from skimage import color, img_as_float
 mask_map = [('left_lung', 1), ('right_lung', 2)]
 
 
-resize_width = 512
-resize_height = 512
-
 
 def fill_hole(mask):
     # print('mask in fill hole {}'.format(mask[:-1]))
@@ -145,6 +142,7 @@ def extract_right_lung_corner(contour_right):
 
 def compute_ctr(left_lung, right_lung, alpha_1=0.5, alpha_2=0.8, beta_1=0.75,
                 beta_2=0.85):
+    height, width 
     ind_left = left_lung > 0
     ind_right = right_lung > 0
 
@@ -168,8 +166,6 @@ def compute_ctr(left_lung, right_lung, alpha_1=0.5, alpha_2=0.8, beta_1=0.75,
 
     mask_left[np.nonzero(mask_left)] = 3
     mask_right[np.nonzero(mask_right)] = 2
-
-    mask = mask_left + mask_right
 
     central = get_central(ind_left, ind_right, top)  # central line
 
@@ -205,10 +201,10 @@ def compute_ctr(left_lung, right_lung, alpha_1=0.5, alpha_2=0.8, beta_1=0.75,
             row_right = row
             left_loc = rr
 
-    coor_lung_left = coor_lung_left[0] * 1.0 / resize_width, coor_lung_left[1] * 1.0 / resize_height
-    coor_lung_right = coor_lung_right[0] * 1.0 / resize_width, coor_lung_right[1] * 1.0 / resize_height
-    coor_heart_right = (right_loc * 1.0 / resize_width, row_left * 1.0 / resize_height)
-    coor_heart_left = (left_loc * 1.0 / resize_width, row_right * 1.0 / resize_height)
+    coor_lung_left = coor_lung_left[0] * 1.0 / width, coor_lung_left[1] * 1.0 / height
+    coor_lung_right = coor_lung_right[0] * 1.0 / width, coor_lung_right[1] * 1.0 / height
+    coor_heart_right = (right_loc * 1.0 / width, row_left * 1.0 / height)
+    coor_heart_left = (left_loc * 1.0 / width, row_right * 1.0 / height)
 
     od = collections.OrderedDict()
     od['lung_left'] = coor_lung_left

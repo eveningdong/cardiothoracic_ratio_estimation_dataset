@@ -100,6 +100,9 @@ def get_central(ind_left, ind_right, top):
 
 def compute_ctr(left_lung, right_lung, 
                 alpha_1=0.5, alpha_2=0.8, beta_1=0.75, beta_2=0.85):
+    left_lung, contour_left = clean_mask(left_lung)
+    right_lung, contour_right = clean_mask(right_lung)
+
     top_l, bot_l, left_l, right_l = get_border(contour_left)
     top_r, bot_r, left_r, right_r = get_border(contour_right)
 
